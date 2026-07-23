@@ -1,0 +1,17 @@
+PLACEHOLDER: banner.png
+
+This file should be replaced with an actual banner image for the repository.
+
+Recommended specifications:
+- Format: PNG
+- Resolution: 1280x640 or 1920x640
+- Include repository name "Workflows"
+- Include subtitle "Production-ready n8n workflow templates"
+- Use a professional, clean design
+- Consider using GitHub's recommended banner dimensions
+
+Tools to create:
+- Canva
+- Figma
+- Adobe Photoshop
+- Online banner generators

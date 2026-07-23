@@ -1,0 +1,15 @@
+PLACEHOLDER: workflow.png
+
+This file should be replaced with an actual screenshot of the n8n workflow.
+
+To capture the screenshot:
+1. Open the workflow in n8n
+2. Take a full screenshot of the workflow canvas
+3. Save it as workflow.png in this directory
+4. Delete this placeholder file
+
+Recommended specifications:
+- Format: PNG
+- Resolution: 1920x1080 or higher
+- Include all nodes and connections
+- Clean background (use n8n's light theme for best results)
