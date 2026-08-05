@@ -1,0 +1,750 @@
+{
+  "name": "Analyze your resume",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "4191aad3-6928-46df-9fb2-825cb57b5df8",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -4820,
+        140
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1iBfY5oJ0ciSwYOSDz7U4aDIVXydPxiI8"
+        },
+        "options": {}
+      },
+      "id": "df49400b-6b17-4bf7-a63d-e0761534d341",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -5040,
+        140
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1If_YNfm4zYlVwlv9eGdUHtZuFrwLrfpDdBK70lr2_pA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1038962310
+        },
+        "options": {}
+      },
+      "id": "8f6d50e4-83fc-4e89-ab63-205de0edeb3e",
+      "name": "Get row(s) in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -4600,
+        140
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iQZ0n65II71EHCi2",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let url = \"https://www.linkedin.com/jobs/search/?f_TPR=r86400&sortBy=DD&count=10\";\nconst keyword = $input.first().json.Keyword;\nconst location = $input.first().json.Location;\nconst experienceLevel = $input.first().json['Experience Level'];\nconst remote = $input.first().json.Remote;\nconst jobType = $input.first().json['Job Type'];\nconst easyApply = $input.first().json['Easy Apply'];\nif (keyword && keyword !== \"\") { url += `&keywords=${encodeURIComponent(keyword)}`; }\nif (location && location !== \"\") { url += `&location=${encodeURIComponent(location)}`; }\nif (experienceLevel && experienceLevel !== \"\") {\n  const transformedExperiences = experienceLevel.split(\",\").map((exp) => {\n    switch (exp.trim()) { case \"Internship\": return \"1\"; case \"Entry level\": return \"2\"; case \"Associate\": return \"3\"; case \"Mid-Senior level\": return \"4\"; case \"Director\": return \"5\"; case \"Executive\": return \"6\"; default: return \"\"; }\n  }).filter(Boolean);\n  if (transformedExperiences.length > 0) { url += `&f_E=${transformedExperiences.join(\",\")}`; }\n}\nif (remote && remote !== \"\") {\n  const transformedRemote = remote.split(\",\").map((e) => {\n    switch (e.trim()) { case \"Remote\": return \"2\"; case \"Hybrid\": return \"3\"; case \"On-Site\": return \"1\"; default: return \"\"; }\n  }).filter(Boolean);\n  if (transformedRemote.length > 0) { url += `&f_WT=${transformedRemote.join(\",\")}`; }\n}\nif (jobType && jobType !== \"\") {\n  const transformedJobType = jobType.split(\",\").map((type) => {\n    switch (type.trim()) { case \"Full-time\": return \"F\"; case \"Part-time\": return \"P\"; case \"Contract\": return \"C\"; case \"Temporary\": return \"T\"; case \"Volunteer\": return \"V\"; case \"Internship\": return \"I\"; default: return \"\"; }\n  }).filter(Boolean);\n  if (transformedJobType.length > 0) { url += `&f_JT=${transformedJobType.join(\",\")}`; }\n}\nif (easyApply === true || easyApply === \"true\") { url += \"&f_EA=true\"; }\nreturn { url };"
+      },
+      "id": "1775c069-2f1d-4694-a80e-b862a72150fc",
+      "name": "Create search URL",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -4380,
+        140
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "id": "dc85eb91-432f-41f9-9f52-2df4608c4c85",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -5260,
+        140
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "0cfe0801-1bed-4c49-9039-1411eece1cc7",
+      "name": "Fetch Jobs from Linkedin",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -4140,
+        140
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "links",
+              "cssSelector": "ul.jobs-search__results-list li div a[class*=\"base-card\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "16f0dd60-c088-4ced-b06b-d535507a3943",
+      "name": "Extract Job Links",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        -3920,
+        140
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "77862304-e39c-46d6-8673-1ee15232e24e",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        -3080,
+        160
+      ],
+      "typeVersion": 3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "f1bde8bb-662a-4a8d-a67b-b4c972d7cdd1",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        -2840,
+        200
+      ],
+      "webhookId": "48e138f0-ce87-4487-99ce-ab4baef785ca",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.links }}",
+        "options": {}
+      },
+      "id": "5a2ffcc1-81c0-48f7-9411-3de2289fbef5",
+      "name": "Fetch Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -2560,
+        200
+      ],
+      "executeOnce": false,
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "div h1"
+            },
+            {
+              "key": "company",
+              "cssSelector": "div span a"
+            },
+            {
+              "key": "location",
+              "cssSelector": "div span[class*='topcard__flavor topcard__flavor--bullet']"
+            },
+            {
+              "key": "description",
+              "cssSelector": "div.description__text.description__text--rich"
+            },
+            {
+              "key": "jobid",
+              "cssSelector": "a[data-item-type='semaphore']",
+              "returnValue": "attribute",
+              "attribute": "data-semaphore-content-urn"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "78a34083-621d-40bb-b2ef-19bcba9f3bd4",
+      "name": "Parse Job Attributes",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        -2280,
+        200
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "784ead57-9d83-4e08-b83c-23fa165bf045",
+              "name": "description",
+              "type": "string",
+              "value": "={{ $json.description ? $json.description.replaceAll(/\\s+/g, ' ').substring(0, 1500) : '' }}"
+            },
+            {
+              "id": "fd3c9d2c-5ff9-46a7-b70a-f990fbc7da9d",
+              "name": "jobid",
+              "type": "string",
+              "value": "={{ $json.jobid ? $json.jobid.split(\":\").last() : '' }}"
+            },
+            {
+              "id": "27a20cd2-ab0d-42b7-9cee-ea64e0e26ea3",
+              "name": "applyLink",
+              "type": "string",
+              "value": "={{ $json.jobid ? \"https://www.linkedin.com/jobs/view/\"+ $json.jobid.split(\":\").last() : '' }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "f9f04204-fe32-4f3d-984b-2600f06252ae",
+      "name": "Modify Job Attributes",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -2020,
+        200
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "summarize",
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "append",
+              "field": "title"
+            },
+            {
+              "aggregation": "append",
+              "field": "company"
+            },
+            {
+              "aggregation": "append",
+              "field": "location"
+            },
+            {
+              "aggregation": "append",
+              "field": "description"
+            },
+            {
+              "aggregation": "append",
+              "field": "jobid"
+            },
+            {
+              "field": "applyLink"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b82dbf0-5f45-4b32-835a-ead649bccd9f",
+      "name": "Aggregate Jobs",
+      "type": "n8n-nodes-base.itemLists",
+      "position": [
+        -2860,
+        -200
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Senior Career Coach. \n\nGoal: Analyze the \"Delta\" between the user's current resume and the reality of the job market based on these scraped job listings.\n\nInputs:\n- User Resume: {{ $('Extract from File').first().json.text }}\n\n- Market Data (Jobs):\n\njob title :{{ $json.appended_title }}\nCompany: {{ $json.appended_company }}\nlocation : {{ $json.appended_location }} \n all job description: {{ $json.appended_description }}\n\n- My Goal: Role: {{ $('Get row(s) in sheet').item.json.Keyword }} location: \n{{ $('Get row(s) in sheet').item.json.Location }}\n\nExperince: {{ $('Get row(s) in sheet').item.json['Experience Level'] }}\n\nTask:\n1. Identify 'High-Frequency Missing Skills': Analyze the aggregated job descriptions and identify the top 3 to 5 technical skills that appear REPEATEDLY across multiple jobs but are missing from the resume. Strictly ignore unique, one-off skills that only appear in a single JD.\n2. Career Coach Analysis: Be blunt. Based on the gap between the resume and these high-frequency market demands, why is the user not landing these roles yet?\n3. 30-Day Action Plan: Create a rigorous 4-week (30-day) roadmap to close these specific gaps.\n   - Week 1 (Days 1-7): Knowledge Acquisition (Specific courses, tools, or libraries to learn the top missing skills).\n   - Week 2 (Days 8-14): Guided Practice (Small exercises or mini-projects to build muscle memory).\n   - Week 3 (Days 15-21): The Capstone Project (What specific, complex feature should they build and add to their portfolio to prove these skills?).\n   - Week 4 (Days 22-30): Market Positioning (How to rewrite the resume summary, bullet points, and LinkedIn profile to reflect this new 30-day transformation).\n\nOutput: You must return ONLY a valid JSON object.\n{\n  \"readiness_score\": 65,\n  \"high_frequency_missing_skills\": [\"Skill A\", \"Skill B\", \"Skill C\"],\n  \"coach_notes\": \"...\",\n  \"training_plan_30_days\": {\n    \"week_1_foundations\": \"...\",\n    \"week_2_practice\": \"...\",\n    \"week_3_portfolio_project\": \"...\",\n    \"week_4_repositioning\": \"...\"\n  }\n}",
+        "options": {}
+      },
+      "id": "86882cce-6454-4a79-ab7a-8ffb67d920c9",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -2640,
+        -300
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "802b61bb-1803-44a3-947e-cff6eeab8971",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -2620,
+        -120
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.output.replaceAll(/```(?:json)?/g, \"\").trim() }}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "de8d72f9-d712-462a-9c3e-6d1c3d723d0d",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -2300,
+        -200
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "chatId": "#Your Telegram Chat ID here#",
+        "text": "=🚀 **Career Coach 30-Day Market Report** 🚀\n\n📊 **Market Readiness:** {{ $json.readiness_score }}% (Based on {{ $('Aggregate Jobs').item.json.count_applyLink }} scanned)\n\n❌ **Recurring Missing Skills:**\n{{ $json.high_frequency_missing_skills.join(', ') }}\n\n💡 **Coach Advice:** \n{{ $json.coach_notes }}\n\n📅 **30-Day Transformation Plan:**\n• **Week 1 (Foundations):** {{ $json.training_plan_30_days.week_1_foundations }}\n\n• **Week 2 (Practice):** {{ $json.training_plan_30_days.week_2_practice }}\n\n• **Week 3 (Project):** {{ $json.training_plan_30_days.week_3_portfolio_project }}\n\n• **Week 4 (Positioning):** {{ $json.training_plan_30_days.week_4_repositioning }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "78f752f8-bee9-4f55-9fac-a4f880bb99b3",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -2060,
+        -200
+      ],
+      "webhookId": "d45b1b4d-b8b5-464b-b0b3-a0c4962ad667",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "links",
+        "options": {}
+      },
+      "id": "9d8c7981-c438-46e2-a540-d27e6112dbe3",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -3700,
+        140
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "id": "42684003-025d-47e5-8159-824801107f33",
+      "name": "Limit",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        -3420,
+        140
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### How it works\nThis workflow acts as an AI-powered Career Coach. It routinely pulls your target job preferences and future aspirations from a Google Sheet, alongside your current resume from Google Drive. \n\nIt then scrapes the latest matching job postings from LinkedIn and combines the descriptions to analyze the current market demand. Using OpenAI, it compares your resume against this market data to identify high-frequency missing skills. Finally, it generates a structured 30-day training plan and sends it directly to your Telegram so you can upskill and land your dream role.\n\n### Setup\n1. Download the [Google Sheets Template](https://docs.google.com/spreadsheets/d/e/2PACX-1vSo0HAZi8Dr73EsbECV6-lWkbCczuvaERiiUc7KVriolIP4rkO9TDsQ60OMw_X0U8NmPL3SsByJmlTT/pub?output=ods) and upload it to your Drive.\n2. Connect your **Google Drive** and **Google Sheets** credentials. Ensure your resume ID and Sheet ID are correctly mapped in the nodes.\n3. Connect your **OpenAI** account.\n4. Connect your **Telegram** bot and add your `Chat ID`.\n5. Adjust the **Schedule Trigger** to your preferred frequency (e.g., weekly).\n\n### Customization tips\n- Update the LinkedIn search URL parameters in the `Create search URL` code node if you need stricter location or remote/hybrid filters.\n- If you scrape more than 10 jobs at once, ensure you use `gpt-4o` or a model with a large context window to handle the combined text volume.",
+        "height": 704,
+        "width": 464,
+        "color": 6
+      },
+      "id": "c4af757a-f2b6-4a39-899f-12f14e2544b1",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -5860,
+        -220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Career Coach AI & Notification\nAggregates all job descriptions into one batch, runs the AI gap analysis, and sends the 30-day plan to Telegram.",
+        "height": 404,
+        "width": 1336,
+        "color": 5
+      },
+      "id": "24a81e54-ac6f-4060-8362-4556b745d432",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3020,
+        -420
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "⚠️ **Cost Safeguard**\nThis node limits the data payload. Do not bypass this, or large scrapes will cause high API token usage!",
+        "height": 336,
+        "width": 262,
+        "color": "#E61414"
+      },
+      "id": "7b6f23d9-c0cf-4a56-b7ba-777e2f9e0ae2",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3500,
+        20
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Update your Chat ID in this telegram node",
+        "height": 288
+      },
+      "id": "f88c4a8f-4eb6-4d22-bae2-f9f3d190ed4d",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2140,
+        -340
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Input & Search Setup\nFetches your resume, reads target job criteria from Sheets, and scrapes the  matching LinkedIn job links.",
+        "height": 380,
+        "width": 1760,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -5340,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "d25c4dd4-b44c-4458-b49a-79851fc88f2d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1720,
+        200
+      ],
+      "id": "ec77e68e-b9d8-409b-8335-36aaabfbc1ef",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iQZ0n65II71EHCi2",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 2. Process Job Postings\nLoops through each individual job link to scrape, clean, and format the full job descriptions.",
+        "height": 456,
+        "width": 1628,
+        "color": 3
+      },
+      "id": "33e29e22-f6f6-4d6d-a5c4-89b6967d386b",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3160,
+        80
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Jobs": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Job Page": {
+      "main": [
+        [
+          {
+            "node": "Parse Job Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create search URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch Jobs from Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Links": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create search URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Job Attributes": {
+      "main": [
+        [
+          {
+            "node": "Modify Job Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jobs from Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modify Job Attributes": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "679f9579-4f97-4b7b-bdee-847c4914f060",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0ad5932481841b9c64e1576baf90b24887963b0125b4b2739d8fea6a0705f390"
+  },
+  "id": "eRSf8Kj9rx9a93Jp",
+  "tags": []
+}
